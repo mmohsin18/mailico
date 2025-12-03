@@ -1,0 +1,19 @@
+Title: Welcome to Mailico
+Slug: welcome-to-mailico
+Date: 2025-12-01
+Excerpt: A quick look at why we’re building Mailico.
+---
+Mailico is your email infrastructure buddy for modern product teams.
+
+Here we’ll share updates about shipping, design decisions,
+and how we think about email as a product surface.
+===
+
+Title: Building a Developer-First Email Layer
+Slug: developer-first-email-layer
+Date: 2025-12-02
+Excerpt: Under the hood of Mailico’s API & dashboard.
+---
+In this post, we walk through the architecture of Mailico,
+how we think about webhooks, logs, and developer experience.
+===
