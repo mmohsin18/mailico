@@ -1,4 +1,5 @@
 import BottomNav from '@/components/Layout/BottomNav'
+import { Toaster } from '@/components/ui/sonner'
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
@@ -66,8 +67,12 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  // fallback; browsers that understand the array above will override
-  themeColor: '#F8FAFC'
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  minimumScale: 1,
+  maximumScale: 1,
+  themeColor: '#7DFF6A'
 }
 
 export default function RootLayout({
@@ -76,32 +81,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <head>
-        {/* Viewport + PWA bits */}
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, viewport-fit=cover"
-        />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta
-          name="apple-mobile-web-app-status-bar-style"
-          content="black-translucent"
-        />
-
-        {/* Let browser know we support both */}
-        <meta name="color-scheme" content="light dark" />
-
-        {/* manifest + apple touch icon (also set in metadata.icons) */}
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/favicon/icon-192.png" />
-      </head>
+    <html lang='en'>
       <body className={inter.className}>
-        <div className="mx-auto flex min-h-screen flex-col">
-          <main className="flex grow flex-col">{children}</main>
+        <div className='mx-auto flex min-h-screen flex-col'>
+          <main className='flex grow flex-col'>{children}</main>
           <BottomNav />
-        </div>
+        </div>  
       </body>
+      <Toaster />
     </html>
   )
 }

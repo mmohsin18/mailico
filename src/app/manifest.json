@@ -19,6 +19,9 @@
   },
   "display_override": ["standalone", "minimal-ui"],
   "theme_color": "#FF4D2E",
+  "offline_enabled": true,
+  "offline_page": "/offline",
+  "splash_pages": "/splash",
   "background_color": "#0F0F10",
   "orientation": "portrait",
   "icons": [

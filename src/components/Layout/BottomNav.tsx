@@ -3,6 +3,7 @@
 import { Mail, Send, Workflow, UserRound } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import Footer from './Footer'
 
 const tabs = [
   { href: '/inbox', label: 'Inbox', icon: Mail },
@@ -15,10 +16,10 @@ export default function BottomNav() {
   const pathname = usePathname()
 
   // Hide on home page & auth
-  if (!pathname || pathname === '/' || pathname === '/auth') return null
+  if (!pathname || pathname === '/' || pathname === '/auth' || pathname.startsWith('/blog')) return <Footer/>
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50">
+    <nav className="fixed inset-x-0 bottom-0 md:hidden z-50">
       <div className="mx-auto max-w-screen-sm px-4 pb-[env(safe-area-inset-bottom)]">
         <div
           className="

@@ -1,24 +1,24 @@
 // app/(marketing)/page.tsx
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
   BarChart3,
   Globe,
   Mail,
+  Moon,
   Server,
   ShieldCheck,
   Sparkles,
-  Users,
   Sun,
-  Moon
+  Users
 } from 'lucide-react'
+import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
 
+import WaitlistForm from '@/components/Features/WaitlistForm'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import WaitlistForm from '@/components/Features/WaitlistForm'
 
 /* --- tiny parallax hook (reads scroll and returns offsets for layers) --- */
 function useParallax() {
@@ -40,7 +40,28 @@ function useParallax() {
 
 export default function LandingPage() {
   const p = useParallax()
-  const [isDark, setIsDark] = useState(false) // 🌞 light by default
+
+  // 🌞 light by default
+  const [isDark, setIsDark] = useState(false)
+
+  // ✅ Read saved theme on mount (client only)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('theme')
+      if (saved === 'dark') setIsDark(true)
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  // ✅ Persist theme whenever it changes (client only)
+  useEffect(() => {
+    try {
+      localStorage.setItem('theme', isDark ? 'dark' : 'light')
+    } catch {
+      // ignore
+    }
+  }, [isDark])
 
   const lightBg =
     'radial-gradient(1200px 700px at 10% -10%, rgba(125,255,106,0.18), transparent 55%), ' +
@@ -93,10 +114,6 @@ export default function LandingPage() {
     ? 'border-white/15 bg-white/10'
     : 'border-slate-200 bg-white/80 shadow-sm'
 
-  const pillSurface = isDark
-    ? 'border-white/15 bg-white/10'
-    : 'border-slate-200 bg-white/70 shadow-sm'
-
   const subtleBlock = isDark
     ? 'border-white/10 bg-white/5'
     : 'border-slate-200 bg-white/80 shadow-sm'
@@ -111,7 +128,10 @@ export default function LandingPage() {
       {/* ====================== THEME TOGGLE ====================== */}
       <div className='pointer-events-none fixed right-5 top-5 z-40'>
         <Button
-          onClick={() => setIsDark((prev) => !prev)}
+          onClick={() => {
+            // ✅ avoids stale isDark, also persists correctly
+            setIsDark(prev => !prev)
+          }}
           className={`pointer-events-auto h-9 w-9 rounded-full border text-xs transition-colors duration-300 ${
             isDark
               ? 'border-white/25 bg-white/5 text-white hover:bg-white/10'
@@ -219,7 +239,9 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, duration: 0.6 }}
               className={`mx-auto mt-10 w-full max-w-xl rounded-[2rem] border p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl transition-colors ${
-                isDark ? 'border-white/15 bg-white/10' : 'border-slate-200 bg-white'
+                isDark
+                  ? 'border-white/15 bg-white/10'
+                  : 'border-slate-200 bg-white'
               }`}
             >
               <div
@@ -276,6 +298,7 @@ export default function LandingPage() {
                       +12.4% vs yesterday
                     </div>
                   </div>
+
                   <div
                     className={`${subtleBlock} rounded-2xl p-3 text-xs transition-colors`}
                   >
@@ -296,6 +319,7 @@ export default function LandingPage() {
                       0.2% bounces
                     </div>
                   </div>
+
                   <div
                     className={`${subtleBlock} rounded-2xl p-3 text-xs transition-colors`}
                   >
@@ -356,10 +380,7 @@ export default function LandingPage() {
       </section>
 
       {/* ====================== FEATURES ====================== */}
-      <section
-        id='features'
-        className='mx-auto max-w-6xl px-5 py-10 md:py-16'
-      >
+      <section id='features' className='mx-auto max-w-6xl px-5 py-10 md:py-16'>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -539,49 +560,6 @@ export default function LandingPage() {
       >
         <WaitlistForm source='landing-hero' />
       </div>
-
-      {/* ====================== FOOTER ====================== */}
-      <footer className='mx-auto max-w-6xl px-5 pb-10 text-sm'>
-        <div
-          className={`rounded-2xl border p-4 backdrop-blur transition-colors ${
-            isDark
-              ? 'border-white/10 bg-white/5 text-white/70'
-              : 'border-slate-200 bg-white/90 text-slate-500 shadow-sm'
-          }`}
-        >
-          <div className='flex flex-col items-center justify-between gap-2 md:flex-row'>
-            <div>
-              © {new Date().getFullYear()} Mailico — Email for product teams
-            </div>
-            <div className='flex items-center gap-4'>
-              <Link
-                href='/blog'
-                className={isDark ? 'hover:text-white' : 'hover:text-slate-900'}
-              >
-                Blog
-              </Link>
-              <Link
-                href='/privacy'
-                className={isDark ? 'hover:text-white' : 'hover:text-slate-900'}
-              >
-                Privacy
-              </Link>
-              <Link
-                href='/terms'
-                className={isDark ? 'hover:text-white' : 'hover:text-slate-900'}
-              >
-                Terms
-              </Link>
-              <Link
-                href='/contact'
-                className={isDark ? 'hover:text-white' : 'hover:text-slate-900'}
-              >
-                Contact
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
     </main>
   )
 }
