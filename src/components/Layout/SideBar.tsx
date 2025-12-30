@@ -14,7 +14,7 @@ export default function SideBar({
   active = 'sent'
 }: SideBarProps) {
   return (
-    <aside className="md:sticky md:top-20 md:h-[calc(100vh-5rem)]">
+    <aside className="pt-5">
       <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-white/5">
         <Button
           onClick={() => setComposeOpen(true)}

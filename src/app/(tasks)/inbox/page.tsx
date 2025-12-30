@@ -73,52 +73,40 @@ export default function InboxPage() {
 
   const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const form = e.target as HTMLFormElement
+
+    const form = e.currentTarget
     const formData = new FormData(form)
-    const data = {
+
+    const payload = {
       from: formData.get('from'),
-      fromName: user.default_email.find(
-        email => (email as any)?.address === formData.get('from')
-      )
-        ? (
-            user.default_email.find(
-              email => (email as any)?.address === formData.get('from')
-            ) as any
-          )?.name
-        : '',
+      fromName: formData.get('fromName') || 'Mailico',
       email: formData.get('email'),
-      api: user.api,
       subject: formData.get('subject'),
       message: formData.get('message')
     }
 
-    if (!data.from || !data.email || !data.subject || !data.message) {
-      toast.error('Please fill in all fields')
+    if (!payload.from || !payload.email || !payload.message) {
+      toast.error('Please fill all required fields')
       return
     }
 
     try {
-      setSending(true)
-      const response = await fetch('/api/send', {
+      const res = await fetch('/api/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
       })
 
-      if (response.ok) {
-        toast.success('Email sent successfully!')
-        form.reset()
-        setComposeOpen(false)
-      } else {
-        const error = await response.json().catch(() => ({}))
-        toast.error(
-          `Failed to send: ${error?.error?.message || JSON.stringify(error)}`
-        )
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data?.error || 'Failed to send email')
       }
-    } catch (err) {
-      toast.error('Error sending email')
-    } finally {
-      setSending(false)
+
+      toast.success('Email sent successfully')
+      form.reset()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send email')
     }
   }
 
@@ -185,10 +173,6 @@ export default function InboxPage() {
 
       {/* Main layout */}
       <div className='mx-auto grid max-w-[1400px] grid-cols-1 gap-4 px-3 py-4 md:px-5 lg:grid-cols-[280px_1fr]'>
-        {/* Sidebar: show normally on lg+, hide on mobile (or keep if you want it stacked) */}
-        <div className='hidden lg:block'>
-          <SideBar setComposeOpen={setComposeOpen} />
-        </div>
 
         {/* Content */}
         <main className='grid grid-cols-1 gap-4 lg:grid-cols-[minmax(420px,1fr)_minmax(420px,1fr)]'>
