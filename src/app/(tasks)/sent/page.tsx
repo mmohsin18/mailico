@@ -48,9 +48,8 @@ export default function SentPage() {
   const user = userData[0]
 
   const [query, setQuery] = React.useState('')
-  const [selectedId, setSelectedId] = React.useState<string | null>(
-    sentEmails?.[0]?.id ?? null
-  )
+  const [selectedId, setSelectedId] = React.useState<string | null>(null)
+
 
   const [composeOpen, setComposeOpen] = React.useState(false)
   const [sending, setSending] = React.useState(false)
@@ -185,13 +184,22 @@ export default function SentPage() {
       </div>
 
       {/* Main layout */}
-      <div className='mx-auto grid max-w-[1400px] grid-cols-1 gap-4 px-3 py-4 md:grid-cols-[280px_1fr] md:px-5'>
-        <SideBar setComposeOpen={setComposeOpen} />
+      <div className='mx-auto grid max-w-[1400px] grid-cols-1 gap-4 px-3 py-4 md:px-5 lg:grid-cols-[280px_1fr]'>
+        {/* Sidebar: show normally on lg+, hide on mobile (or keep if you want it stacked) */}
+        <div className='hidden lg:block'>
+          <SideBar setComposeOpen={setComposeOpen} />
+        </div>
 
         {/* Content */}
         <main className='grid grid-cols-1 gap-4 lg:grid-cols-[minmax(420px,1fr)_minmax(420px,1fr)]'>
-          {/* List */}
-          <section className='rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/5'>
+          {/* LIST */}
+          <section
+            className={cn(
+              'rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/5',
+              // On mobile: hide list when in detail view
+              selectedId && 'hidden lg:block'
+            )}
+          >
             <div className='flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-white/10'>
               <div>
                 <h1 className='text-base font-semibold'>Sent</h1>
@@ -199,14 +207,27 @@ export default function SentPage() {
                   {filtered.length} messages
                 </p>
               </div>
-              <div className='text-xs text-slate-500 dark:text-slate-400'>
-                Sorted by date
+
+              {/* Mobile: show compose button since sidebar is hidden */}
+              <div className='flex items-center gap-2'>
+                <div className='hidden text-xs text-slate-500 dark:text-slate-400 sm:block'>
+                  Sorted by date
+                </div>
+
+                <Button
+                  type='button'
+                  size='sm'
+                  className='rounded-full lg:hidden'
+                  onClick={() => setComposeOpen(true)}
+                >
+                  Compose
+                </Button>
               </div>
             </div>
 
             <div className='max-h-[calc(100vh-12rem)] overflow-auto'>
-              {/* Header row (gmail-ish) */}
-              <div className='grid grid-cols-[24px_1fr_90px] items-center gap-2 px-4 py-2 text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400'>
+              {/* Header row (hide on very small screens) */}
+              <div className='hidden grid-cols-[24px_1fr_90px] items-center gap-2 px-4 py-2 text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:grid'>
                 <div />
                 <div>Recipient • Subject</div>
                 <div className='text-right'>Date</div>
@@ -216,10 +237,15 @@ export default function SentPage() {
                 {filtered.map(m => (
                   <button
                     key={m.id}
-                    onClick={() => setSelectedId(m.id)}
+                    onClick={() => {
+                      setSelectedId(m.id)
+                    }}
                     className={cn(
-                      'grid w-full grid-cols-[24px_1fr_90px] items-center gap-2 px-4 py-3 text-left transition',
-                      'hover:bg-[#f2f6ff] dark:hover:bg-white/5',
+                      // Mobile layout: make date wrap under content; Desktop keeps 3 cols
+                      'w-full text-left transition hover:bg-[#f2f6ff] dark:hover:bg-white/5',
+                      'px-4 py-3',
+                      'grid gap-2',
+                      'grid-cols-[24px_1fr] sm:grid-cols-[24px_1fr_90px]',
                       selectedId === m.id && 'bg-[#e8f0fe] dark:bg-white/10'
                     )}
                   >
@@ -242,9 +268,15 @@ export default function SentPage() {
                         <span className='mx-2 text-slate-400'>—</span>
                         {m.message}
                       </div>
+
+                      {/* Mobile date (shown under preview) */}
+                      <div className='mt-1 text-[11px] text-slate-500 dark:text-slate-400 sm:hidden'>
+                        {formatDate(m.date)}
+                      </div>
                     </div>
 
-                    <div className='text-right text-xs text-slate-500 dark:text-slate-400'>
+                    {/* Desktop date col */}
+                    <div className='hidden text-right text-xs text-slate-500 dark:text-slate-400 sm:block'>
                       {formatDate(m.date)}
                     </div>
                   </button>
@@ -259,14 +291,38 @@ export default function SentPage() {
             </div>
           </section>
 
-          {/* Reading pane */}
-          <section className='rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/5'>
+          {/* READING PANE */}
+          <section
+            className={cn(
+              'rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/5',
+              // On mobile: show only in detail view
+              !selectedId && 'hidden lg:block'
+            )}
+          >
             <div className='border-b border-slate-200 px-4 py-3 dark:border-white/10'>
+              {/* Mobile back */}
+              <div className='mb-2 flex items-center justify-between lg:hidden'>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  className='rounded-full lg:hidden'
+                  onClick={() => setSelectedId(null)}
+                >
+                  ← Back
+                </Button>
+                {/* Optional: quick actions on mobile */}
+                <div className='text-xs text-slate-500 dark:text-slate-400'>
+                  {selected ? formatDate(selected.date) : ''}
+                </div>
+              </div>
+
               <h2 className='truncate text-base font-semibold'>
                 {selected?.subject || 'Select an email'}
               </h2>
+
               {selected && (
-                <div className='mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400'>
+                <div className='mt-1 flex flex-col gap-1 text-xs text-slate-500 dark:text-slate-400 sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-1'>
                   <span>
                     <span className='font-medium text-slate-700 dark:text-slate-200'>
                       From:
@@ -279,7 +335,7 @@ export default function SentPage() {
                     </span>{' '}
                     {selected.to}
                   </span>
-                  <span>
+                  <span className='hidden sm:inline'>
                     <span className='font-medium text-slate-700 dark:text-slate-200'>
                       Date:
                     </span>{' '}
@@ -300,7 +356,7 @@ export default function SentPage() {
                     {selected.message}
                   </div>
 
-                  <div className='flex items-center gap-2'>
+                  <div className='flex flex-wrap items-center gap-2'>
                     <Button
                       variant='outline'
                       className='rounded-full'
@@ -413,6 +469,7 @@ export default function SentPage() {
                   >
                     Cancel
                   </Button>
+                  <div className='h-20 bg-red-800'/>
                 </div>
               </div>
             </form>

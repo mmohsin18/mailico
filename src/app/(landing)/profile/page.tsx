@@ -1,4 +1,4 @@
-import ComingSoon from '@/components/Layout/ComingSoon'
+import ComingSoon from "@/components/Features/ComingSoon"
 
 function ProfilePage() {
   return <ComingSoon />

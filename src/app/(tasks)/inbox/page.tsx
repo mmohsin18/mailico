@@ -49,10 +49,7 @@ export default function InboxPage() {
   const user = userData[0]
 
   const [query, setQuery] = React.useState('')
-  const [selectedId, setSelectedId] = React.useState<string | null>(
-    sentEmails?.[0]?.id ?? null
-
-  )
+  const [selectedId, setSelectedId] = React.useState<string | null>(null)
 
   const [composeOpen, setComposeOpen] = React.useState(false)
   const [sending, setSending] = React.useState(false)
@@ -205,7 +202,7 @@ export default function InboxPage() {
           >
             <div className='flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-white/10'>
               <div>
-                <h1 className='text-base font-semibold'>Sent</h1>
+                <h1 className='text-base font-semibold'>Inbox</h1>
                 <p className='text-xs text-slate-500 dark:text-slate-400'>
                   {filtered.length} messages
                 </p>
@@ -456,15 +453,6 @@ export default function InboxPage() {
 
                 <div className='flex items-center justify-between pt-1'>
                   <Button
-                    type='submit'
-                    className='rounded-full'
-                    disabled={sending}
-                  >
-                    <Send className='mr-2 h-4 w-4' />
-                    {sending ? 'Sending…' : 'Send'}
-                  </Button>
-
-                  <Button
                     type='button'
                     variant='ghost'
                     className='rounded-full'
@@ -472,7 +460,16 @@ export default function InboxPage() {
                   >
                     Cancel
                   </Button>
+                  <Button
+                    type='submit'
+                    className='rounded-full'
+                    disabled={sending}
+                  >
+                    <Send className='mr-2 h-4 w-4' />
+                    {sending ? 'Sending…' : 'Send'}
+                  </Button>
                 </div>
+                <div className='h-14' />
               </div>
             </form>
           </div>

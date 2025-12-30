@@ -12,7 +12,7 @@ export default function SplashPage() {
     setVisible(true)
 
     const timer = setTimeout(() => {
-      router.replace('/sent')
+      router.replace('/inbox')
     }, 2000)
 
     return () => clearTimeout(timer)
