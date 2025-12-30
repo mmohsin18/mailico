@@ -1,0 +1,275 @@
+'use client'
+
+import { supabase } from '@/lib/supabase/client'
+import { Loader2, Lock, Mail, User } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import * as React from 'react'
+import { toast } from 'sonner'
+
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+
+function cn(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(' ')
+}
+
+export default function AuthPage() {
+  const router = useRouter()
+
+  const [mode, setMode] = React.useState<'signin' | 'signup'>('signin')
+  const [loading, setLoading] = React.useState(false)
+
+  const [name, setName] = React.useState('')
+  const [email, setEmail] = React.useState('')
+  const [password, setPassword] = React.useState('')
+
+  const params = useSearchParams()
+  const nextPath = params.get('next') || '/profile'
+
+  // If already logged in, go to app
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) router.replace(nextPath)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!email || !password) {
+      toast.error('Please fill in email and password.')
+      return
+    }
+    if (mode === 'signup' && !name.trim()) {
+      toast.error('Please enter your name.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      if (mode === 'signup') {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { name: name.trim() },
+            emailRedirectTo: `${window.location.origin}/auth/confirm`
+          }
+        })
+        if (error) throw error
+
+        toast.success(
+          'Account created. Check your email to confirm (if enabled).'
+        )
+        // You can redirect right away OR wait for confirmation flow
+        router.replace('/sent')
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        })
+        if (error) throw error
+
+        toast.success('Signed in!')
+        router.replace(nextPath)
+        router.refresh()
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Authentication failed.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <main className='min-h-screen bg-[#f6f8fc] px-4 py-10 text-slate-900 dark:bg-black dark:text-white'>
+      <div className='mx-auto grid w-full max-w-[1040px] gap-6 md:grid-cols-2'>
+        {/* Left: Brand */}
+        <div className='hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/5 md:block md:p-8'>
+          <div className='flex items-center gap-3'>
+            <div className='grid h-12 w-12 place-items-center rounded-2xl bg-[#e8f0fe] dark:bg-white/10'>
+              <Mail className='h-5 w-5' />
+            </div>
+            <div>
+              <h1 className='text-xl font-semibold tracking-tight'>Mailico</h1>
+              <p className='text-sm text-slate-600 dark:text-slate-300'>
+                Email campaigns + transactional sends.
+              </p>
+            </div>
+          </div>
+
+          <div className='mt-8 space-y-3 text-sm text-slate-600 dark:text-slate-300'>
+            <div className='rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5'>
+              <div className='font-medium text-slate-900 dark:text-white'>
+                One dashboard
+              </div>
+              <div className='mt-1'>
+                Manage campaigns, automations, and transactional events in one
+                place.
+              </div>
+            </div>
+
+            <div className='rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5'>
+              <div className='font-medium text-slate-900 dark:text-white'>
+                BYO Resend key
+              </div>
+              <div className='mt-1'>
+                Later you’ll store your API key securely and send on your
+                behalf—server-only.
+              </div>
+            </div>
+
+            <div className='rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5'>
+              <div className='font-medium text-slate-900 dark:text-white'>
+                Clean & fast UI
+              </div>
+              <div className='mt-1'>
+                Gmail-inspired layout that stays responsive on mobile.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Auth card */}
+        <div className='rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/5 md:p-8'>
+          <div className='flex flex-col items-center justify-between'>
+            <div className='flex rounded-full border border-slate-200 bg-white p-1 dark:border-white/10 dark:bg-white/5'>
+              <button
+                type='button'
+                onClick={() => setMode('signin')}
+                className={cn(
+                  'rounded-full px-3 py-1 text-xs font-medium transition',
+                  mode === 'signin'
+                    ? 'bg-[#e8f0fe] text-slate-900 dark:bg-white/10 dark:text-white'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                )}
+              >
+                Sign in
+              </button>
+              <button
+                type='button'
+                onClick={() => setMode('signup')}
+                className={cn(
+                  'rounded-full px-3 py-1 text-xs font-medium transition',
+                  mode === 'signup'
+                    ? 'bg-[#e8f0fe] text-slate-900 dark:bg-white/10 dark:text-white'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                )}
+              >
+                Sign up
+              </button>
+            </div>
+            <div className='w-full pt-6'>
+              <h2 className='text-lg font-semibold'>
+                {mode === 'signin' ? 'Sign in' : 'Create an account'}
+              </h2>
+              <p className='mt-1 text-sm text-slate-600 dark:text-slate-300'>
+                {mode === 'signin'
+                  ? 'Welcome back — let’s send emails.'
+                  : 'Start sending email the sane way.'}
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={onSubmit} className='mt-6 space-y-4'>
+            {mode === 'signup' && (
+              <div className='space-y-2'>
+                <Label htmlFor='name'>Name</Label>
+                <div className='relative'>
+                  <User className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400' />
+                  <Input
+                    id='name'
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder='Your name'
+                    className='h-11 rounded-xl pl-9'
+                    autoComplete='name'
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className='space-y-2'>
+              <Label htmlFor='email'>Email</Label>
+              <div className='relative'>
+                <Mail className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400' />
+                <Input
+                  id='email'
+                  type='email'
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder='you@company.com'
+                  className='h-11 rounded-xl pl-9'
+                  autoComplete='email'
+                  required
+                />
+              </div>
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='password'>Password</Label>
+              <div className='relative'>
+                <Lock className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400' />
+                <Input
+                  id='password'
+                  type='password'
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder='••••••••'
+                  className='h-11 rounded-xl pl-9'
+                  autoComplete={
+                    mode === 'signin' ? 'current-password' : 'new-password'
+                  }
+                  required
+                />
+              </div>
+              <div className='flex flex-col items-start justify-between'>
+                <span className='text-xs text-slate-500 dark:text-slate-400'>
+                  Minimum 8 chars recommended
+                </span>
+                {mode === 'signin' && (
+                  <Link
+                    href='/forgot'
+                    className='text-right text-xs text-slate-700 underline-offset-4 hover:underline dark:text-slate-200'
+                  >
+                    Forgot password?
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            <Button
+              type='submit'
+              className='h-11 w-full rounded-xl'
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  Please wait…
+                </>
+              ) : mode === 'signin' ? (
+                'Sign in'
+              ) : (
+                'Create account'
+              )}
+            </Button>
+
+            <p className='pt-2 text-center text-xs text-slate-500 dark:text-slate-400'>
+              By continuing you agree to our{' '}
+              <span className='text-slate-700 dark:text-slate-200'>Terms</span>{' '}
+              &{' '}
+              <span className='text-slate-700 dark:text-slate-200'>
+                Privacy
+              </span>
+              .
+            </p>
+          </form>
+        </div>
+      </div>
+    </main>
+  )
+}

@@ -72,7 +72,6 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
   minimumScale: 1,
   maximumScale: 1,
-  themeColor: '#7DFF6A'
 }
 
 export default function RootLayout({
@@ -83,7 +82,7 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body className={inter.className}>
-        <div className='mx-auto flex min-h-screen flex-col'>
+        <div className='mx-auto bg-[#f6f8fc] flex min-h-screen flex-col'>
           <main className='flex grow flex-col'>{children}</main>
           <BottomNav />
         </div>  

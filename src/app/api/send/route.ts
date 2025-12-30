@@ -1,5 +1,6 @@
 import { EmailTemplate } from '@/components/Features/EmailTemplate'
 import { Resend } from 'resend'
+export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
   try {
