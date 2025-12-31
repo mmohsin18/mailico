@@ -10,7 +10,7 @@ export default function ComposeModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl p-0">
+      <DialogContent className="max-w-xl w-[90%] rounded-xl p-0">
         <ComposeForm onSent={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>

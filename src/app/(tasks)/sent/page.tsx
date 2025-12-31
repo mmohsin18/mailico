@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { Send, Star, StarOff, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useCompose } from '../compose-context'
 
 type SentEmail = {
   id: string
@@ -28,6 +29,8 @@ export default function SentPage() {
   const [emails, setEmails] = useState<SentEmail[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const { setComposeOpen } = useCompose()
 
   const selected = emails.find(e => e.id === selectedId)
 
@@ -72,11 +75,29 @@ export default function SentPage() {
             selectedId && 'hidden lg:block'
           )}
         >
-          <div className='border-b border-slate-200 px-4 py-3 dark:border-white/10'>
-            <h1 className='text-base font-semibold'>Sent</h1>
-            <p className='text-xs text-slate-500 dark:text-slate-400'>
-              {emails.length} messages
-            </p>
+          <div className='flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-white/10'>
+            <div>
+              <h1 className='text-base font-semibold'>Sent</h1>
+              <p className='text-xs text-slate-500 dark:text-slate-400'>
+                {emails.length} messages
+              </p>
+            </div>
+
+            {/* Mobile: show compose button since sidebar is hidden */}
+            <div className='flex items-center gap-2'>
+              <div className='hidden text-xs text-slate-500 dark:text-slate-400 sm:block'>
+                Sorted by date
+              </div>
+
+              <Button
+                type='button'
+                size='sm'
+                className='rounded-full lg:hidden'
+                onClick={() => setComposeOpen(true)}
+              >
+                Compose
+              </Button>
+            </div>
           </div>
 
           <div className='max-h-[calc(100vh-12rem)] overflow-auto'>

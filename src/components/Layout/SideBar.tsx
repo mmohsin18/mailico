@@ -1,7 +1,6 @@
 import React from 'react'
 import { Button } from '../ui/button'
 import { FileText, Inbox, Pencil, Send, Trash2 } from 'lucide-react'
-import Link from 'next/link'
 import { NavItem } from '../Elements/NavItem'
 
 type SideBarProps = {

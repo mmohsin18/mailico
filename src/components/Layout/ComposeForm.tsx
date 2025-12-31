@@ -97,7 +97,7 @@ export default function ComposeForm({
   }
 
   return (
-    <div className="flex flex-col gap-3 p-4">
+    <div className="flex flex-col w-full gap-3 p-4">
       {/* Header */}
       <div className="text-sm font-semibold text-slate-900 dark:text-white">
         New Message

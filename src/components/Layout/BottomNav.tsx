@@ -9,7 +9,7 @@ const tabs = [
   { href: '/inbox', label: 'Inbox', icon: Mail },
   { href: '/sent', label: 'Sent', icon: Send },
   { href: '/automation', label: 'Automation', icon: Workflow },
-  { href: '/profile', label: 'Profile', icon: UserRound }
+  { href: '/control', label: 'Control', icon: UserRound }
 ] as const
 
 export default function BottomNav() {
