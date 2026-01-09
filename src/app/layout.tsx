@@ -84,7 +84,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <div className='mx-auto bg-[#f6f8fc] flex min-h-screen flex-col'>
           <main className='flex grow flex-col'>{children}</main>
-          {/* <BottomNav /> */}
+          <BottomNav />
         </div>  
       </body>
       <Toaster />
