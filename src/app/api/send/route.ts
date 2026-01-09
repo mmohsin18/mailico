@@ -98,7 +98,7 @@ export async function POST(request: Request) {
       from: fromHeader,
       to,
       subject,
-      react: EmailTemplate({ firstName: message }),
+      react: message,
       scheduledAt: scheduledAt
     })
 
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
         const { createClient } = await import('@supabase/supabase-js')
         const adminAuthClient = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
           {
             auth: {
               autoRefreshToken: false,
