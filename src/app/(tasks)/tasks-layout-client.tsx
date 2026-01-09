@@ -8,6 +8,7 @@ import Image from 'next/image'
 import * as React from 'react'
 import { toast } from 'sonner'
 import { ComposeContext } from './compose-context'
+import { useRouter } from 'next/navigation'
 import { ReactNode, useState } from 'react'
 
 type User = {
@@ -23,6 +24,7 @@ export default function TasksLayoutClient({
   children: ReactNode
   user: User | undefined
 }) {
+  const router = useRouter()
   const [composeOpen, setComposeOpen] = useState(false)
 
   return (
@@ -40,7 +42,7 @@ export default function TasksLayoutClient({
                 <div className='grid h-9 w-9 place-items-center rounded-full bg-[#e9eef6] dark:bg-white/10'>
                   <Mail className='h-5 w-5' />
                 </div>
-                <div className='hidden text-sm font-semibold md:block'>
+                <div className='hidden text-md font-semibold md:block'>
                   Mailico
                 </div>
               </div>
@@ -49,14 +51,14 @@ export default function TasksLayoutClient({
                 <Button
                   variant='ghost'
                   className='h-10 rounded-full'
-                  onClick={() => toast.message('Refresh (mock)')}
+                  onClick={() => router.refresh()}
                 >
                   <RefreshCcw className='h-4 w-4' />
                 </Button>
                 <Button
                   variant='ghost'
                   className='h-10 rounded-full'
-                  onClick={() => toast.message('Settings (mock)')}
+                  onClick={() => router.push('/control') }
                 >
                   <Settings className='h-4 w-4' />
                 </Button>

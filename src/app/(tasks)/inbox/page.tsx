@@ -1,175 +1,79 @@
 'use client'
 
-import { sentEmails } from 'data/sentEmail'
-import { userData } from 'data/userData'
-import Image from 'next/image'
-import * as React from 'react'
+import { supabase } from '@/lib/supabase/client'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 
-import SideBar from '@/components/Layout/SideBar'
 import {
-  Mail,
-  RefreshCcw,
-  Search,
   Send,
-  Settings,
   Star,
   StarOff,
   Trash2
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { useCompose } from '../compose-context'
 
-type MailItem = (typeof sentEmails)[number]
-
-function cn(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ')
+type Email = {
+  id: string
+  from_email: string
+  to_email: string
+  subject: string
+  message: string
+  starred: boolean
+  created_at: string
 }
 
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr)
-  if (Number.isNaN(d.getTime())) return dateStr
-  return d.toLocaleString(undefined, {
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString(undefined, {
     month: 'short',
-    day: '2-digit'
+    day: 'numeric'
   })
 }
 
 export default function InboxPage() {
-  const user = userData[0]
+  const [emails, setEmails] = useState<Email[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filtered, setFiltered] = useState<Email[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  
+  const { setComposeOpen } = useCompose()
 
-  const [query, setQuery] = React.useState('')
-  const [selectedId, setSelectedId] = React.useState<string | null>(null)
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      const { data: auth } = await supabase.auth.getUser()
+      
+      // If authenticating, we might want to filter by user. 
+      // For now, mirroring SentPage logic which fetches based on user_id
+      if (auth.user) {
+        const { data, error } = await supabase
+          .from('emails')
+          .select('*')
+          .eq('user_id', auth.user.id)
+          .eq('direction', 'inbox')
+          .order('created_at', { ascending: false })
 
-  const [composeOpen, setComposeOpen] = React.useState(false)
-  const [sending, setSending] = React.useState(false)
-
-  const filtered = React.useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return sentEmails
-    return sentEmails.filter(m => {
-      return (
-        m.to.toLowerCase().includes(q) ||
-        m.from.toLowerCase().includes(q) ||
-        m.subject.toLowerCase().includes(q) ||
-        m.message.toLowerCase().includes(q)
-      )
-    })
-  }, [query])
-
-  const selected = React.useMemo(() => {
-    return sentEmails.find(m => m.id === selectedId) ?? null
-  }, [selectedId])
-
-  const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
-    const form = e.currentTarget
-    const formData = new FormData(form)
-
-    const payload = {
-      from: formData.get('from'),
-      fromName: formData.get('fromName') || 'Mailico',
-      email: formData.get('email'),
-      subject: formData.get('subject'),
-      message: formData.get('message')
-    }
-
-    if (!payload.from || !payload.email || !payload.message) {
-      toast.error('Please fill all required fields')
-      return
-    }
-
-    try {
-      const res = await fetch('/api/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data?.error || 'Failed to send email')
+        if (data) {
+          setEmails(data as Email[])
+          setFiltered(data as Email[])
+        }
+      } else {
+        window.location.href = '/auth?next=/inbox'
       }
-
-      toast.success('Email sent successfully')
-      form.reset()
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to send email')
+      setLoading(false)
     }
-  }
+    load()
+  }, [])
+
+  useEffect(() => {
+    setFiltered(emails)
+  }, [emails])
+
+  const selected = emails.find(e => e.id === selectedId)
 
   return (
     <div className='min-h-screen bg-[#f6f8fc] text-slate-900 dark:bg-black dark:text-white'>
-      {/* Top bar */}
-      <div className='sticky top-0 z-30 border-b border-black/5 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-black/60'>
-        <div className='mx-auto flex h-16 max-w-[1400px] items-center gap-3 px-3 md:px-5'>
-          <div className='flex items-center gap-2'>
-            <div className='grid h-9 w-9 place-items-center rounded-full bg-[#e9eef6] dark:bg-white/10'>
-              <Mail className='h-5 w-5' />
-            </div>
-            <div className='hidden text-sm font-semibold md:block'>Mailico</div>
-          </div>
-
-          <div className='flex flex-1 items-center'>
-            <div className='relative w-full max-w-[720px]'>
-              <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500' />
-              <Input
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder='Search mail'
-                className='h-10 rounded-full border-slate-200 bg-[#eef3fb] pl-9 shadow-none focus-visible:ring-0 dark:border-white/10 dark:bg-white/5'
-              />
-            </div>
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='ghost'
-              className='h-10 rounded-full'
-              onClick={() => toast.message('Refresh (mock)')}
-            >
-              <RefreshCcw className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              className='h-10 rounded-full'
-              onClick={() => toast.message('Settings (mock)')}
-            >
-              <Settings className='h-4 w-4' />
-            </Button>
-
-            <div className='ml-1 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 dark:border-white/10 dark:bg-white/5'>
-              <Image
-                src={user.avatar}
-                alt={user.name}
-                width={64}
-                height={64}
-                className='h-8 w-8 rounded-full object-cover'
-              />
-              <div className='hidden pr-2 md:block'>
-                <div className='text-xs font-semibold leading-4'>
-                  {user.name}
-                </div>
-                <div className='text-[11px] leading-4 text-slate-500 dark:text-slate-400'>
-                  {user.email}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Main layout */}
       <div className='mx-auto grid max-w-[1400px] grid-cols-1 gap-4 px-3 py-4 md:px-5 lg:grid-cols-[280px_1fr]'>
@@ -180,7 +84,6 @@ export default function InboxPage() {
           <section
             className={cn(
               'rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/5',
-              // On mobile: hide list when in detail view
               selectedId && 'hidden lg:block'
             )}
           >
@@ -188,16 +91,11 @@ export default function InboxPage() {
               <div>
                 <h1 className='text-base font-semibold'>Inbox</h1>
                 <p className='text-xs text-slate-500 dark:text-slate-400'>
-                  {filtered.length} messages
+                  {loading ? 'Loading...' : `${filtered.length} messages`}
                 </p>
               </div>
 
-              {/* Mobile: show compose button since sidebar is hidden */}
               <div className='flex items-center gap-2'>
-                <div className='hidden text-xs text-slate-500 dark:text-slate-400 sm:block'>
-                  Sorted by date
-                </div>
-
                 <Button
                   type='button'
                   size='sm'
@@ -213,7 +111,7 @@ export default function InboxPage() {
               {/* Header row (hide on very small screens) */}
               <div className='hidden grid-cols-[24px_1fr_90px] items-center gap-2 px-4 py-2 text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:grid'>
                 <div />
-                <div>Recipient • Subject</div>
+                <div>Sender • Subject</div>
                 <div className='text-right'>Date</div>
               </div>
 
@@ -225,7 +123,6 @@ export default function InboxPage() {
                       setSelectedId(m.id)
                     }}
                     className={cn(
-                      // Mobile layout: make date wrap under content; Desktop keeps 3 cols
                       'w-full text-left transition hover:bg-[#f2f6ff] dark:hover:bg-white/5',
                       'px-4 py-3',
                       'grid gap-2',
@@ -243,32 +140,30 @@ export default function InboxPage() {
 
                     <div className='min-w-0'>
                       <div className='truncate text-sm font-semibold'>
-                        To: <span className='font-semibold'>{m.to}</span>
+                         <span className='font-semibold'>{m.from_email}</span>
                       </div>
                       <div className='truncate text-xs text-slate-600 dark:text-slate-300'>
                         <span className='font-medium text-slate-800 dark:text-white'>
-                          {m.subject}
+                          {m.subject || '(no subject)'}
                         </span>
                         <span className='mx-2 text-slate-400'>—</span>
-                        {m.message}
+                        {m.message?.replace(/<[^>]*>?/gm, '')}
                       </div>
 
-                      {/* Mobile date (shown under preview) */}
                       <div className='mt-1 text-[11px] text-slate-500 dark:text-slate-400 sm:hidden'>
-                        {formatDate(m.date)}
+                        {formatDate(m.created_at)}
                       </div>
                     </div>
 
-                    {/* Desktop date col */}
                     <div className='hidden text-right text-xs text-slate-500 dark:text-slate-400 sm:block'>
-                      {formatDate(m.date)}
+                      {formatDate(m.created_at)}
                     </div>
                   </button>
                 ))}
 
-                {filtered.length === 0 && (
+                {!loading && filtered.length === 0 && (
                   <div className='px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400'>
-                    No sent emails found.
+                    No emails found.
                   </div>
                 )}
               </div>
@@ -279,12 +174,10 @@ export default function InboxPage() {
           <section
             className={cn(
               'rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/5',
-              // On mobile: show only in detail view
               !selectedId && 'hidden lg:block'
             )}
           >
             <div className='border-b border-slate-200 px-4 py-3 dark:border-white/10'>
-              {/* Mobile back */}
               <div className='mb-2 flex items-center justify-between lg:hidden'>
                 <Button
                   type='button'
@@ -295,9 +188,8 @@ export default function InboxPage() {
                 >
                   ← Back
                 </Button>
-                {/* Optional: quick actions on mobile */}
                 <div className='text-xs text-slate-500 dark:text-slate-400'>
-                  {selected ? formatDate(selected.date) : ''}
+                  {selected ? formatDate(selected.created_at) : ''}
                 </div>
               </div>
 
@@ -311,19 +203,19 @@ export default function InboxPage() {
                     <span className='font-medium text-slate-700 dark:text-slate-200'>
                       From:
                     </span>{' '}
-                    {selected.from}
+                    {selected.from_email}
                   </span>
                   <span>
                     <span className='font-medium text-slate-700 dark:text-slate-200'>
                       To:
                     </span>{' '}
-                    {selected.to}
+                    {selected.to_email}
                   </span>
                   <span className='hidden sm:inline'>
                     <span className='font-medium text-slate-700 dark:text-slate-200'>
                       Date:
                     </span>{' '}
-                    {new Date(selected.date).toLocaleString()}
+                    {new Date(selected.created_at).toLocaleString()}
                   </span>
                 </div>
               )}
@@ -337,7 +229,7 @@ export default function InboxPage() {
               ) : (
                 <div className='space-y-4'>
                   <div className='rounded-xl border border-slate-200 bg-white p-4 text-sm leading-6 dark:border-white/10 dark:bg-white/5'>
-                    {selected.message}
+                    <div dangerouslySetInnerHTML={{ __html: selected.message }} />
                   </div>
 
                   <div className='flex flex-wrap items-center gap-2'>
@@ -365,100 +257,6 @@ export default function InboxPage() {
         </main>
       </div>
 
-      {/* Compose modal (simple, gmail-ish) */}
-      {composeOpen && (
-        <div className='fixed inset-0 z-50 grid place-items-end bg-black/30 p-3 md:p-6'>
-          <div className='w-full max-w-[520px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-[#0b0b0c]'>
-            <div className='flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-white/10'>
-              <div className='text-sm font-semibold'>New Message</div>
-              <Button
-                variant='ghost'
-                className='h-9 rounded-full'
-                onClick={() => setComposeOpen(false)}
-              >
-                Close
-              </Button>
-            </div>
-
-            <form className='p-4' onSubmit={sendEmail}>
-              <div className='grid gap-3'>
-                <div className='grid gap-2'>
-                  <Label>From</Label>
-                  <Select name='from'>
-                    <SelectTrigger className='w-full rounded-xl'>
-                      <SelectValue placeholder='Select Sender Email' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {user.default_email.map((email, index) => (
-                        <SelectItem
-                          key={index}
-                          value={(email as any)?.address || email}
-                        >
-                          {(email as any)?.name || email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className='grid gap-2'>
-                  <Label htmlFor='email'>To</Label>
-                  <Input
-                    id='email'
-                    type='email'
-                    name='email'
-                    placeholder='recipient@example.com'
-                    required
-                    className='rounded-xl'
-                  />
-                </div>
-
-                <div className='grid gap-2'>
-                  <Label htmlFor='subject'>Subject</Label>
-                  <Input
-                    id='subject'
-                    name='subject'
-                    placeholder='Subject'
-                    required
-                    className='rounded-xl'
-                  />
-                </div>
-
-                <div className='grid gap-2'>
-                  <Label htmlFor='message'>Message</Label>
-                  <Textarea
-                    id='message'
-                    name='message'
-                    placeholder='Write your message…'
-                    required
-                    className='min-h-[140px] rounded-xl'
-                  />
-                </div>
-
-                <div className='flex items-center justify-between pt-1'>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    className='rounded-full'
-                    onClick={() => setComposeOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type='submit'
-                    className='rounded-full'
-                    disabled={sending}
-                  >
-                    <Send className='mr-2 h-4 w-4' />
-                    {sending ? 'Sending…' : 'Send'}
-                  </Button>
-                </div>
-                <div className='h-14' />
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

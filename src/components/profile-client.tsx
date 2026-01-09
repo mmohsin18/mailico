@@ -139,6 +139,10 @@ export default function ProfileViewClient() {
             </div>
 
             <div className='mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2'>
+              <Info label='Plan' value={(profile as any)?.plan ? (profile as any).plan.toUpperCase() : 'FREE'} />
+              <div className="flex items-end pb-1">
+                <Link href="/pricing" className="text-xs text-emerald-600 hover:underline font-medium">Upgrade Plan →</Link>
+              </div>
               <Info label='Domain' value={profile?.domain} />
               <Info label='Phone' value={profile?.phone} />
               <Info label='Country' value={profile?.country} />

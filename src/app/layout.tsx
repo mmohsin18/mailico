@@ -7,9 +7,9 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 const APP_NAME = 'Mailico'
-const APP_DEFAULT_TITLE = 'Mailico - Your Emailing Buddy'
+const APP_DEFAULT_TITLE = 'Mailico — Email infrastructure for product teams'
 const APP_TITLE_TEMPLATE = '%s - Mailico'
-const APP_DESCRIPTION = 'Your Emailing Buddy'
+const APP_DESCRIPTION = 'The modern email layer for SaaS. Ship transactional & marketing emails from one dashboard.'
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,
@@ -84,7 +84,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <div className='mx-auto bg-[#f6f8fc] flex min-h-screen flex-col'>
           <main className='flex grow flex-col'>{children}</main>
-          <BottomNav />
+          {/* <BottomNav /> */}
         </div>  
       </body>
       <Toaster />

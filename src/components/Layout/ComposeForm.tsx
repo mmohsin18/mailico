@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import RichEditor from '@/components/Elements/RichEditor'
 import {
   Select,
   SelectContent,
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { Loader2, Send } from 'lucide-react'
+import { fetchRejectionReason } from '@/lib/rejection'
 
 type SenderIdentity = {
   id: number
@@ -34,6 +36,7 @@ export default function ComposeForm({
   const [to, setTo] = React.useState('')
   const [subject, setSubject] = React.useState('')
   const [message, setMessage] = React.useState('')
+  const [scheduledAt, setScheduledAt] = React.useState('')
 
   // Load sender identities for logged-in user
   React.useEffect(() => {
@@ -55,7 +58,8 @@ export default function ComposeForm({
 
   const sendEmail = async () => {
     if (!from || !to || !message) {
-      toast.error('From, To, and Message are required')
+      const reason = await fetchRejectionReason()
+      toast.error(`${reason} (From, To, and Message are required)`)
       return
     }
 
@@ -71,14 +75,17 @@ export default function ComposeForm({
           fromName: sender?.name || 'Mailico',
           email: to,
           subject,
-          message
+          message,
+          scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined
         })
       })
 
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data?.error || 'Failed to send email')
+        const naasReason = await fetchRejectionReason()
+        const apiError = data?.reason || data?.error || 'Failed to send email'
+        throw new Error(`${naasReason} (${apiError})`)
       }
 
       toast.success('Email sent')
@@ -87,6 +94,7 @@ export default function ComposeForm({
       setTo('')
       setSubject('')
       setMessage('')
+      setScheduledAt('')
 
       onSent?.()
     } catch (err: any) {
@@ -119,7 +127,7 @@ export default function ComposeForm({
 
       {/* To */}
       <Input
-        placeholder="To"
+        placeholder="To (separate multiple emails with commas)"
         value={to}
         onChange={e => setTo(e.target.value)}
       />
@@ -132,12 +140,21 @@ export default function ComposeForm({
       />
 
       {/* Message */}
-      <Textarea
-        placeholder="Write your message…"
-        className="min-h-[160px]"
+      <RichEditor
         value={message}
-        onChange={e => setMessage(e.target.value)}
+        onChange={setMessage}
       />
+
+      {/* Schedule (Optional) */}
+      <div className="grid gap-1">
+        <div className="text-xs font-medium text-slate-500">Schedule (optional)</div>
+        <Input
+          type="datetime-local"
+          value={scheduledAt}
+          onChange={e => setScheduledAt(e.target.value)}
+          className="w-full"
+        />
+      </div>
 
       {/* Actions */}
       <div className="flex justify-end gap-2 pt-2">

@@ -1,4 +1,3 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ReactNode } from 'react'
 import TasksLayoutClient from './tasks-layout-client'
 import { fetchUser } from 'data/fetchUser'

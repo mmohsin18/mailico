@@ -18,15 +18,16 @@ function cn(...classes: Array<string | false | null | undefined>) {
 export default function AuthPage() {
   const router = useRouter()
 
-  const [mode, setMode] = React.useState<'signin' | 'signup'>('signin')
+  const params = useSearchParams()
+  const nextPath = params.get('next') || '/profile'
+  const initialMode = params.get('mode') === 'signup' ? 'signup' : 'signin'
+
+  const [mode, setMode] = React.useState<'signin' | 'signup'>(initialMode)
   const [loading, setLoading] = React.useState(false)
 
   const [name, setName] = React.useState('')
   const [email, setEmail] = React.useState('')
   const [password, setPassword] = React.useState('')
-
-  const params = useSearchParams()
-  const nextPath = params.get('next') || '/profile'
 
   // If already logged in, go to app
   React.useEffect(() => {

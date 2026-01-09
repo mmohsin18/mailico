@@ -10,7 +10,8 @@ export async function fetchUser() {
     name: 'Guest',
     email: 'guest@example.com',
     avatar: '',
-    domain: 'example.com'
+    domain: 'example.com',
+    plan_name: 'free'
   }
 
   if (user) {
@@ -21,13 +22,14 @@ export async function fetchUser() {
       .single()
 
 
-      console.log(profile);
+
 
     userData = {
       name: profile?.full_name || user.user_metadata?.name || user.email || '',
       email: user.email || '',
       avatar: profile?.avatar || user.user_metadata?.avatar_url || '',
-      domain: profile?.domain || 'example.com'
+      domain: profile?.domain || 'example.com',
+      plan_name: profile?.plan_name || 'free'
     }
 
     return userData

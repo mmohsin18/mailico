@@ -43,18 +43,18 @@ export default async function ControlPage() {
 
   const whatsNew = [
     {
-      title: 'Automation builder improvements',
-      date: 'Dec 28, 2025',
+      title: 'Premium billing & usage tracking',
+      date: 'Jan 9, 2026',
       href: '/changelog'
     },
     {
-      title: 'New sender identity flow',
-      date: 'Dec 18, 2025',
+      title: 'Router & Navigation stability fixes',
+      date: 'Jan 9, 2026',
       href: '/changelog'
     },
     {
-      title: 'Sent page filters + search',
-      date: 'Dec 11, 2025',
+      title: 'Dashboard V2 & Real-time Analytics',
+      date: 'Jan 3, 2026',
       href: '/changelog'
     }
   ]
@@ -109,7 +109,7 @@ export default async function ControlPage() {
                     'border border-foreground/10'
                   )}
                 >
-                  Free
+                  {user?.plan_name ? user.plan_name.charAt(0).toUpperCase() + user.plan_name.slice(1) : 'Free'}
                 </Badge>
               </div>
               <p className='truncate text-sm text-muted-foreground'>

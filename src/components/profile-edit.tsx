@@ -16,6 +16,8 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { toast } from 'sonner'
+import { PLAN_LIMITS, PlanType } from '@/lib/plans'
+import { fetchRejectionReason } from '@/lib/rejection'
 
 type ProfileRow = {
   user_id: string
@@ -110,17 +112,39 @@ export default function ProfileEditClient() {
 
   const saveProfile = async () => {
     if (!profile?.user_id) return
+    const userPlan = (profile as any).plan || 'free'
+    const limits = PLAN_LIMITS[userPlan as PlanType]
+
     setSaving(true)
     try {
+      const trimmedDomain = domain.trim().toLowerCase()
+
+      // 3. Limit Check: Users per domain
+      if (trimmedDomain && trimmedDomain !== profile.domain?.toLowerCase()) {
+        const { count, error: countErr } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('domain', trimmedDomain)
+        
+        if (countErr) throw countErr
+
+        if ((count || 0) >= limits.maxTotalUsersForDomain) {
+          const reason = await fetchRejectionReason()
+          toast.error(`${reason} (The domain ${trimmedDomain} has reached the maximum of ${limits.maxTotalUsersForDomain} users allowed on the ${userPlan} plan.)`)
+          setSaving(false)
+          return
+        }
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({
           name: name.trim(),
-          domain: domain.trim(),
+          domain: trimmedDomain || null,
           phone: phone.trim(),
           country: country.trim(),
           avatar: avatar.trim(),
-          resend_api_key: resendKey.trim() || null // MVP only (encrypt later)
+          resend_api_key: resendKey.trim() || null
         })
         .eq('user_id', profile.user_id)
 
@@ -137,9 +161,32 @@ export default function ProfileEditClient() {
 
   const addSender = async () => {
     if (!profile?.user_id) return
+    const userPlan = (profile as any).plan || 'free'
+    const limits = PLAN_LIMITS[userPlan as PlanType]
+
     if (!newSenderName.trim() || !newSenderAddress.trim()) {
       toast.error('Sender name and address are required')
       return
+    }
+
+    // 1. Domain Protocol Validation
+    if (domain) {
+      if (!newSenderAddress.toLowerCase().endsWith(`@${domain.toLowerCase()}`)) {
+        const reason = await fetchRejectionReason()
+        toast.error(`${reason} (Email must belong to your domain: @${domain})`)
+        return
+      }
+    }
+
+    // 2. Limit Check: Emails per domain
+    const domainPart = newSenderAddress.split('@')[1]?.toLowerCase()
+    if (domainPart) {
+      const existingInDomain = senders.filter(s => s.address.toLowerCase().endsWith(`@${domainPart}`))
+      if (existingInDomain.length >= limits.emailsPerDomain) {
+        const reason = await fetchRejectionReason()
+        toast.error(`${reason} (Your ${userPlan} plan allows only ${limits.emailsPerDomain} email(s) for the domain ${domainPart}.)`)
+        return
+      }
     }
 
     setAddingSender(true)
