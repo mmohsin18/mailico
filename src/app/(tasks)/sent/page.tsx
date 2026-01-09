@@ -48,7 +48,6 @@ export default function SentPage() {
         .from('emails')
         .select('*')
         .eq('user_id', auth.user.id)
-        .eq('direction', 'sent')
         .order('created_at', { ascending: false })
 
       if (error) {

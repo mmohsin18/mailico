@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     // 3️⃣ Fetch user’s profile and usage metrics
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('resend_api_key, plan_name')
+      .select('resend_api_key, plan')
       .eq('user_id', user.id)
       .single()
 
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const planName = (profile?.plan_name || 'free').toLowerCase()
+    const planName = (profile?.plan || 'free').toLowerCase()
     
     // 4️⃣ Check Usage Limits
     const { data: usage, error: usageError } = await supabase
